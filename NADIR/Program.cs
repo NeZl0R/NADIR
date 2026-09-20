@@ -1,5 +1,7 @@
 ﻿using Silk.NET.Maths;
+using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
+using Silk.NET.Core.Native;
 
 WindowOptions options = WindowOptions.Default with
 {
@@ -9,4 +11,21 @@ WindowOptions options = WindowOptions.Default with
 
 using IWindow window = Window.Create(options);
 
+GL? gl = null;
+
+window.Load += () =>
+{
+    gl = window.CreateOpenGL();
+
+    unsafe
+    {
+        byte* versionPtr = gl.GetString(StringName.Version);
+        string? version = SilkMarshal.PtrToString((nint)versionPtr);
+
+        Console.WriteLine($"OpenGL version: {version}");
+    }
+};
+
 window.Run();
+
+gl?.Dispose();
