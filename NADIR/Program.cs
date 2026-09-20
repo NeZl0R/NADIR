@@ -17,6 +17,11 @@ GRGlInterface? glInterface = null;
 GRContext? grContext = null;
 GRBackendRenderTarget? renderTarget = null;
 SKSurface? surface = null;
+SKPaint? fpsPaint = null;
+SKFont? fpsFont = null;
+double fpsTimer = 0;
+int fpsFrameCount = 0;
+double displayedFps = 0;
 
 window.Load += () =>
 {
@@ -94,15 +99,63 @@ window.Load += () =>
             "Failed to create Skia surface.");
     }
 
-    SKCanvas canvas = surface.Canvas;
+    fpsPaint = new SKPaint
+    {
+        IsAntialias = true,
+        Color = SKColors.White
+    };
+
+    fpsFont = new SKFont
+    {
+        Size = 24
+    };
 
     Console.WriteLine("Skia surface initialized.");
 
 };
 
+window.Render += deltaTime =>
+{
+    if (surface is null ||
+        grContext is null ||
+        fpsPaint is null ||
+        fpsFont is null)
+    {
+        return;
+    }
+
+    fpsTimer += deltaTime;
+    fpsFrameCount++;
+
+    if (fpsTimer >= 0.5)
+    {
+        displayedFps = fpsFrameCount / fpsTimer;
+
+        fpsTimer = 0;
+        fpsFrameCount = 0;
+    }
+
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear(SKColors.Black);
+
+    canvas.DrawText(
+        $"FPS: {displayedFps:F0}",
+        20,
+        40,
+        SKTextAlign.Left,
+        fpsFont,
+        fpsPaint);
+
+    canvas.Flush();
+    grContext.Flush();
+};
+
 window.Run();
 
 
+fpsFont?.Dispose();
+fpsPaint?.Dispose();
 surface?.Dispose();
 renderTarget?.Dispose();
 grContext?.Dispose();
