@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/Элементы решения/">
+    <File Path="readme.md" />
+  </Folder>
+  <Project Path="NADIR/NADIR.csproj" />
+</Solution>
