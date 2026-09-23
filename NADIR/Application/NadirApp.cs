@@ -1,4 +1,5 @@
-﻿using NADIR.Diagnostics;
+﻿
+using NADIR.Diagnostics;
 using NADIR.Graphics;
 using NADIR.Rendering;
 using Silk.NET.Maths;
@@ -12,6 +13,7 @@ internal sealed class NadirApp : IDisposable
     private readonly GraphicsContext _graphics;
     private readonly FpsCounter _fpsCounter = new();
     private SceneRenderer? _renderer;
+    private Vector2D<int>? _pendingFramebufferSize;
     private bool _hasRun;
     private bool _disposed;
 
@@ -21,7 +23,8 @@ internal sealed class NadirApp : IDisposable
         {
             Size = new Vector2D<int>(1280, 720),
             Title = "NADIR",
-            PreferredStencilBufferBits = 8
+            PreferredStencilBufferBits = 8,
+            WindowState = WindowState.Maximized
         };
 
         _window = Window.Create(options);
@@ -29,6 +32,7 @@ internal sealed class NadirApp : IDisposable
 
         _window.Load += OnLoad;
         _window.Render += OnRender;
+        _window.FramebufferResize += OnFramebufferResize;
         _window.Closing += ReleaseResources;
     }
 
@@ -55,12 +59,28 @@ internal sealed class NadirApp : IDisposable
     private void OnLoad()
     {
         _graphics.Initialize();
+        _pendingFramebufferSize = null;
         _renderer = new SceneRenderer();
+    }
+
+    private void OnFramebufferResize(Vector2D<int> size)
+    {
+        // Apply only the latest size at the start of a render callback.
+        _pendingFramebufferSize = size;
     }
 
     private void OnRender(double deltaTime)
     {
-        if (_renderer is null || !_graphics.IsReady)
+        if (_renderer is null)
+            return;
+
+        if (_pendingFramebufferSize is { } size)
+        {
+            _graphics.Resize(size);
+            _pendingFramebufferSize = null;
+        }
+
+        if (!_graphics.IsReady)
             return;
 
         _fpsCounter.Update(deltaTime);
@@ -84,6 +104,7 @@ internal sealed class NadirApp : IDisposable
         ReleaseResources();
         _window.Load -= OnLoad;
         _window.Render -= OnRender;
+        _window.FramebufferResize -= OnFramebufferResize;
         _window.Closing -= ReleaseResources;
         _window.Dispose();
         _disposed = true;

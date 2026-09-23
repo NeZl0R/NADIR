@@ -1,4 +1,5 @@
-﻿using Silk.NET.Maths;
+﻿
+using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 using SkiaSharp;
@@ -13,6 +14,7 @@ internal sealed class GraphicsContext : IDisposable
     private GRContext? _grContext;
     private GRBackendRenderTarget? _renderTarget;
     private SKSurface? _surface;
+    private Vector2D<int> _surfaceSize;
     private bool _disposed;
 
     public GraphicsContext(IWindow window)
@@ -49,19 +51,46 @@ internal sealed class GraphicsContext : IDisposable
             ?? throw new InvalidOperationException("Failed to create Skia GPU context.");
 
         Console.WriteLine("Skia GPU context initialized.");
-        CreateSurface();
-        Console.WriteLine("Skia surface initialized.");
+        Resize(_window.FramebufferSize);
     }
 
-    private void CreateSurface()
+    public void Resize(Vector2D<int> size)
     {
-        GL gl = _gl!;
-        Vector2D<int> size = _window.FramebufferSize;
+        ObjectDisposedException.ThrowIf(_disposed, this);
+
+        if (_grContext is null)
+            throw new InvalidOperationException("Graphics have not been initialized.");
+
+        if (IsReady && _surfaceSize == size)
+            return;
+
+        if (_surface is not null)
+            Flush();
+
+        ReleaseSurface();
 
         if (size.X <= 0 || size.Y <= 0)
-            throw new InvalidOperationException("The initial framebuffer size must be positive.");
+            return;
+
+        try
+        {
+            CreateSurface(size);
+            _surfaceSize = size;
+        }
+        catch
+        {
+            ReleaseSurface();
+            throw;
+        }
+    }
+
+    private void CreateSurface(Vector2D<int> size)
+    {
+        GL gl = _gl!;
 
         gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+        // Direct GL calls can invalidate Skia's cached OpenGL state.
+        _grContext!.ResetContext();
         gl.GetInteger(GetPName.SampleBuffers, out int sampleBuffers);
         gl.GetInteger(GetPName.Samples, out int sampleCount);
 
@@ -98,14 +127,22 @@ internal sealed class GraphicsContext : IDisposable
         _grContext!.Flush();
     }
 
+    private void ReleaseSurface()
+    {
+        _surface?.Dispose();
+        _surface = null;
+        _renderTarget?.Dispose();
+        _renderTarget = null;
+        _surfaceSize = default;
+    }
+
     public void Dispose()
     {
         if (_disposed)
             return;
 
         // GPU resources must be released before the window destroys its context.
-        _surface?.Dispose();
-        _renderTarget?.Dispose();
+        ReleaseSurface();
         _grContext?.Dispose();
         _glInterface?.Dispose();
         _gl?.Dispose();
