@@ -4,6 +4,8 @@ using NADIR.Graphics;
 using NADIR.Rendering;
 using Silk.NET.Maths;
 using Silk.NET.Windowing;
+using NADIR.Data;
+using NADIR.Domain;
 
 namespace NADIR.Application;
 
@@ -12,6 +14,7 @@ internal sealed class NadirApp : IDisposable
     private readonly IWindow _window;
     private readonly GraphicsContext _graphics;
     private readonly FpsCounter _fpsCounter = new();
+    private readonly FakeSceneSource _sceneSource = new();
     private SceneRenderer? _renderer;
     private Vector2D<int>? _pendingFramebufferSize;
     private bool _hasRun;
@@ -61,6 +64,13 @@ internal sealed class NadirApp : IDisposable
         _graphics.Initialize();
         _pendingFramebufferSize = null;
         _renderer = new SceneRenderer();
+
+        // Однократная проверка тестовых данных при загрузке окна.
+        PlayerState localPlayer = _sceneSource.LocalPlayer;
+
+        Console.WriteLine(
+            $"Player: {localPlayer.Id}; Local: {localPlayer.IsLocalPlayer}; " +
+            $"Position: X={localPlayer.Position.X}, Y={localPlayer.Position.Y}, Z={localPlayer.Position.Z}");
     }
 
     private void OnFramebufferResize(Vector2D<int> size)
