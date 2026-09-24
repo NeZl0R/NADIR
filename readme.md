@@ -16,6 +16,5 @@ Early development.
 - Keep each development stage functional and testable
 
 ## Development
-giggi
 The project is being developed step by step, with each version introducing
 a small and clearly defined capability.
