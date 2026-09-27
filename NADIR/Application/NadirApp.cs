@@ -7,6 +7,7 @@ using Silk.NET.Windowing;
 using NADIR.Data;
 using NADIR.Domain;
 using NADIR.Maps;
+using System.Numerics;
 
 namespace NADIR.Application;
 
@@ -69,6 +70,7 @@ internal sealed class NadirApp : IDisposable
             "Assets", "Maps", "TestMap", "config.json");
 
         MapConfig mapConfig = MapConfigLoader.Load(configPath);
+        var mapProjection = new MapProjection(mapConfig);
 
         Console.WriteLine(
             $"Map loaded: {mapConfig.Id}; SVG: {mapConfig.SvgFile}");
@@ -88,15 +90,15 @@ internal sealed class NadirApp : IDisposable
         _pendingFramebufferSize = null;
         _renderer = new SceneRenderer();
 
-        // Однократная проверка тестовых игроков.
-        PrintPlayer(_sceneSource.LocalPlayer);
+        // Однократная проверка мировых координат и координат карты.
+        PrintPlayer(_sceneSource.LocalPlayer, mapProjection);
 
         Console.WriteLine(
             $"Remote players: {_sceneSource.RemotePlayers.Count}");
 
         foreach (PlayerState player in _sceneSource.RemotePlayers)
         {
-            PrintPlayer(player);
+            PrintPlayer(player, mapProjection);
         }
     }
 
@@ -143,11 +145,16 @@ internal sealed class NadirApp : IDisposable
         _graphics.Dispose();
     }
 
-    private static void PrintPlayer(PlayerState player)
+    private static void PrintPlayer(
+    PlayerState player,
+    MapProjection projection)
     {
+        Vector2 mapPosition = projection.WorldToMap(player.Position);
+
         Console.WriteLine(
             $"Player: {player.Id}; Local: {player.IsLocalPlayer}; " +
-            $"Position: X={player.Position.X}, Y={player.Position.Y}, Z={player.Position.Z}");
+            $"World: X={player.Position.X}, Y={player.Position.Y}, Z={player.Position.Z}; " +
+            $"Map: X={mapPosition.X}, Y={mapPosition.Y}");
     }
 
     public void Dispose()
