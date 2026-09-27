@@ -108,7 +108,7 @@ internal sealed class NadirApp : IDisposable
 
     private void OnRender(double deltaTime)
     {
-        if (_renderer is null)
+        if (_renderer is null || _map is null)
             return;
 
         if (_pendingFramebufferSize is { } size)
@@ -126,7 +126,8 @@ internal sealed class NadirApp : IDisposable
             _graphics.Canvas,
             _fpsCounter.FramesPerSecond,
             _sceneSource.LocalPlayer,
-            _sceneSource.RemotePlayers);
+            _sceneSource.RemotePlayers,
+            _map);
 
         _graphics.Flush();
     }
