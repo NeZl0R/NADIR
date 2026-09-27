@@ -99,7 +99,13 @@ internal sealed class NadirApp : IDisposable
             return;
 
         _fpsCounter.Update(deltaTime);
-        _renderer.Render(_graphics.Canvas, _fpsCounter.FramesPerSecond);
+
+        _renderer.Render(
+            _graphics.Canvas,
+            _fpsCounter.FramesPerSecond,
+            _sceneSource.LocalPlayer,
+            _sceneSource.RemotePlayers);
+
         _graphics.Flush();
     }
 
