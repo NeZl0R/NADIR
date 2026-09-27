@@ -6,6 +6,7 @@ using Silk.NET.Maths;
 using Silk.NET.Windowing;
 using NADIR.Data;
 using NADIR.Domain;
+using NADIR.Maps;
 
 namespace NADIR.Application;
 
@@ -61,17 +62,27 @@ internal sealed class NadirApp : IDisposable
 
     private void OnLoad()
     {
+        // Путь относительно каталога приложения,
+        // а не текущей рабочей папки.
+        string configPath = Path.Combine(
+            AppContext.BaseDirectory,
+            "Assets", "Maps", "TestMap", "config.json");
+
+        MapConfig mapConfig = MapConfigLoader.Load(configPath);
+
+        Console.WriteLine(
+            $"Map loaded: {mapConfig.Id}; SVG: {mapConfig.SvgFile}");
+
         _graphics.Initialize();
         _pendingFramebufferSize = null;
         _renderer = new SceneRenderer();
 
-        // Однократная проверка тестовых данных при загрузке окна.
+        // Однократная проверка тестовых игроков.
         PrintPlayer(_sceneSource.LocalPlayer);
 
         Console.WriteLine(
             $"Remote players: {_sceneSource.RemotePlayers.Count}");
 
-        // Последовательно выводим каждого удалённого игрока.
         foreach (PlayerState player in _sceneSource.RemotePlayers)
         {
             PrintPlayer(player);
