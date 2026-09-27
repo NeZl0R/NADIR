@@ -1,0 +1,7 @@
+﻿{
+    "Id": "test-map",
+    "SvgFile": "map.svg",
+    "OriginX": 500,
+    "OriginY": 500,
+    "WorldToMapScale": 1
+}

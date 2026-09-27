@@ -15,4 +15,11 @@
     <PackageReference Include="Svg.Skia" Version="5.2.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Assets/Maps/**/*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
