@@ -17,6 +17,7 @@ internal sealed class NadirApp : IDisposable
     private readonly FpsCounter _fpsCounter = new();
     private readonly FakeSceneSource _sceneSource = new();
     private SceneRenderer? _renderer;
+    private SvgMap? _map;
     private Vector2D<int>? _pendingFramebufferSize;
     private bool _hasRun;
     private bool _disposed;
@@ -62,8 +63,7 @@ internal sealed class NadirApp : IDisposable
 
     private void OnLoad()
     {
-        // Путь относительно каталога приложения,
-        // а не текущей рабочей папки.
+        // Путь к конфигурации относительно каталога приложения.
         string configPath = Path.Combine(
             AppContext.BaseDirectory,
             "Assets", "Maps", "TestMap", "config.json");
@@ -72,6 +72,17 @@ internal sealed class NadirApp : IDisposable
 
         Console.WriteLine(
             $"Map loaded: {mapConfig.Id}; SVG: {mapConfig.SvgFile}");
+
+        // SvgFile считается относительно папки конфигурации.
+        string mapDirectory = Path.GetDirectoryName(configPath)!;
+
+        string svgPath = Path.GetFullPath(
+            Path.Combine(mapDirectory, mapConfig.SvgFile));
+
+        _map = SvgMap.Load(svgPath);
+
+        Console.WriteLine(
+            $"SVG loaded: {_map.Bounds.Width} x {_map.Bounds.Height}");
 
         _graphics.Initialize();
         _pendingFramebufferSize = null;
@@ -124,6 +135,10 @@ internal sealed class NadirApp : IDisposable
     {
         _renderer?.Dispose();
         _renderer = null;
+
+        _map?.Dispose();
+        _map = null;
+
         _graphics.Dispose();
     }
 
