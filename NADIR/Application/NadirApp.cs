@@ -66,11 +66,16 @@ internal sealed class NadirApp : IDisposable
         _renderer = new SceneRenderer();
 
         // Однократная проверка тестовых данных при загрузке окна.
-        PlayerState localPlayer = _sceneSource.LocalPlayer;
+        PrintPlayer(_sceneSource.LocalPlayer);
 
         Console.WriteLine(
-            $"Player: {localPlayer.Id}; Local: {localPlayer.IsLocalPlayer}; " +
-            $"Position: X={localPlayer.Position.X}, Y={localPlayer.Position.Y}, Z={localPlayer.Position.Z}");
+            $"Remote players: {_sceneSource.RemotePlayers.Count}");
+
+        // Последовательно выводим каждого удалённого игрока.
+        foreach (PlayerState player in _sceneSource.RemotePlayers)
+        {
+            PrintPlayer(player);
+        }
     }
 
     private void OnFramebufferResize(Vector2D<int> size)
@@ -103,6 +108,13 @@ internal sealed class NadirApp : IDisposable
         _renderer?.Dispose();
         _renderer = null;
         _graphics.Dispose();
+    }
+
+    private static void PrintPlayer(PlayerState player)
+    {
+        Console.WriteLine(
+            $"Player: {player.Id}; Local: {player.IsLocalPlayer}; " +
+            $"Position: X={player.Position.X}, Y={player.Position.Y}, Z={player.Position.Z}");
     }
 
     public void Dispose()
